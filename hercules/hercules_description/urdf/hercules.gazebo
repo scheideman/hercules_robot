@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <robot>
   <gazebo>
-    <!--<plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
       <robotNamespace>/</robotNamespace>
-    </plugin>-->
-    <plugin name="skid_steer_drive_controller" filename="libgazebo_ros_skid_steer_drive.so">
+    </plugin>
+    <!--<plugin name="skid_steer_drive_controller" filename="libgazebo_ros_skid_steer_drive.so">
         <updateRate>100.0</updateRate>
         <robotNamespace>/</robotNamespace>
         <leftFrontJoint>front_left_wheel_joint</leftFrontJoint>
@@ -17,6 +17,6 @@
         <torque>20</torque>
         <topicName>cmd_vel</topicName>
         <broadcastTF>false</broadcastTF>
-    </plugin>
+    </plugin>-->
   </gazebo>
 </robot>
