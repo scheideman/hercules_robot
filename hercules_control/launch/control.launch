@@ -1,10 +1,15 @@
 <launch>
-  <rosparam command="load" file="$(find hercules_control)/config/control.yaml" />
 
-  <node name="controller_spawner" pkg="controller_manager" type="spawner"
-        args="hercules_joint_publisher hercules_velocity_controller --shutdown-timeout 1" />
-  
-
+   <param name="robot_description"
+         command="$(find xacro)/xacro $(find hercules_description)/urdf/hercules.urdf.xacro
+                    --inorder" />
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" ></node>
   <node pkg="topic_tools" type="relay" name="cmd_vel_relay"
-        args="cmd_vel hercules_velocity_controller/cmd_vel" />
+        args="/teleop_velocity_smoother/raw_cmd_vel /cmd_vel_drive" />
+  
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+
+
+
 </launch>
