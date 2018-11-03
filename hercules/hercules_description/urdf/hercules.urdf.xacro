@@ -26,7 +26,7 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="$0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
       </geometry>
@@ -40,12 +40,72 @@
           izz="0.0091"/>
     </inertial>
   </link>
+  
+  <link name="top_mount">
+    <visual>
+      <geometry>
+        <box size="${chassis_length} ${chassis_width} 0.002"/>
+      </geometry>
+      <material name="green">
+        <color rgba="0.22 1.0 0.07 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <joint name="top_mount_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin xyz="0 0 ${chassis_height/2 + 0.04}" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="top_mount"/>
+  </joint>
+  
+  <link name="battery">
+    <visual>
+      <geometry>
+        <box size="0.19 0.08 0.02"/>
+      </geometry>
+      <material name="silver">
+        <color rgba="0.75 0.75 0.75 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <joint name="battery_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin xyz="0.015 0 0.01" rpy="0 0 0"/>
+    <parent link="top_mount"/>
+    <child link="battery"/>
+  </joint>
+  
+   <link name="laser">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+      <material name="black"><color rgba="0.15 0.15 0.15 1" /></material>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
 
-  <gazebo reference="base_link">
-      <material>Gazebo/Green</material>
-  </gazebo>
+  <joint name="laser_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin xyz="0 0 0.025" rpy="0 0 0"/>
+    <parent link="battery"/>
+    <child link="laser"/>
+  </joint>
 
-  <xacro:macro name="wheel" params="prefix *joint_pose">
+<xacro:macro name="wheel" params="prefix *joint_pose">
 
     <link name="${prefix}_wheel">
       <visual>
@@ -82,8 +142,6 @@
       <axis xyz="0 1 0" />
     </joint>
 
-    <!-- In reality, Jackal has only two motors, one per side. However, it's more
-         straightforward for Gazebo to simulate as if there's an actuator per wheel. -->
     <transmission name="${prefix}_wheel_trans">
       <type>transmission_interface/SimpleTransmission</type>
       <joint name="${prefix}_wheel_joint">
@@ -107,8 +165,44 @@
   <xacro:wheel prefix="back_right">
     <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="0 0 0" />
   </xacro:wheel>
+  
+  
+  <xacro:macro name="offset" params="prefix *offset_pose">
+    <link name="${prefix}_offset">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0025" length="0.043"/>
+        </geometry>
+        <material name="gold">
+           <color rgba="0.83 0.68 0.0 1"/>
+        </material>
+      </visual>
+    </link>
+
+    <joint name="${prefix}_offset_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="${prefix}_offset" />
+      <xacro:insert_block name="offset_pose" />
+      <axis xyz="0 1 0" />
+    </joint>
+  </xacro:macro>
+  
+  <xacro:offset prefix="front_left">
+    <origin xyz="${0.175/2} ${0.12/2} 0.035" rpy="0 0 0" />
+  </xacro:offset>
+  <xacro:offset prefix="front_right">
+    <origin xyz="${0.175/2} ${-0.12/2} 0.035" rpy="0 0 0" />
+  </xacro:offset>
+  <xacro:offset prefix="back_left">
+    <origin xyz="${-0.175/2} ${0.12/2} 0.035" rpy="0 0 0" />
+  </xacro:offset>
+  <xacro:offset prefix="back_right">
+    <origin xyz="${-0.175/2} ${-0.12/2} 0.035" rpy="0 0 0" />
+  </xacro:offset>
+  
 
   <!-- Bring in simulation data for Gazebo. -->
-  <xacro:include filename="$(find hercules_description)/urdf/hercules.gazebo" />
+  <!-- <xacro:include filename="$(find hercules_description)/urdf/hercules.gazebo" /> -->
 
 </robot>

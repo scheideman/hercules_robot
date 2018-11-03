@@ -3,12 +3,14 @@ from __future__ import division
 import rospy
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose
-from geometry_msgs.msg import Twist
-from sensor_msg.msg import JointState
+from geometry_msgs.msg import Twist, Quaternion,TransformStamped
+from sensor_msgs.msg import JointState
 import tf
 import math
-import Robot
+from Motors import Motors
 import RPi.GPIO as GPIO
+import time
+import tf2_ros
 
 class HardwareController:
 
@@ -21,6 +23,22 @@ class HardwareController:
         self.D = 50
         self.dx = 0
         self.dy = 0
+        self.ticks_per_rotation = 36
+        self.rads_per_tick = 2 * math.pi / self.ticks_per_rotation
+        self.meters_per_tick = (2 * math.pi * 0.0425) / self.ticks_per_rotation
+        
+        self.leftDir = 1
+        self.rightDir = 1
+        
+        self.leftCount = 0
+        self.rightCount = 0
+        
+        self.leftCur = 0
+        self.rightCur = 0
+        
+        self.positionX = 0.0
+        self.positionY = 0.0
+        self.heading = 0.0
         
         # encoder sensor setup
         GPIO.setmode(GPIO.BCM)
@@ -29,40 +47,146 @@ class HardwareController:
         GPIO.add_event_detect(22, GPIO.RISING, callback=self.left_encoder_callback)
         GPIO.add_event_detect(18, GPIO.RISING, callback=self.right_encoder_callback)
         
-        self.motorDriver = Robot.Robot(left_trim=0, right_trim=0)
+        self.motorDriver=Motors(left_trim=0, right_trim=0)
 
-        self.twist_sub = rospy.Subscriber("/cmd_vel_drive", Twist, self.twist_callback)
+        self.twist_sub = rospy.Subscriber("/cmd_vel_drive", Twist, self.twist_callback,queue_size=1)
         self.velocity_pub = rospy.Publisher("/hw_feedback", JointState, queue_size=1)
+        self.odom_pub = rospy.Publisher("/odom", Odometry, queue_size=1)
+        
+        self.br = tf2_ros.TransformBroadcaster()
 
     def twist_callback(self,data):
         
-        self.dx = data.linear.x
-        self.dw = data.angular.z
+        dx = data.linear.x
+        dw = data.angular.z
+        
+        left = ((dx - 4 * dw*(0.17/2))/(0.0425)) / (26) * 255 
+        right = ((dx + 4 * dw*(0.17/2))/(0.0425)) / (26) * 255
+        
+        left = self.constrain(left)
+        right = self.constrain(right)
+        
+        if(left < 0):
+            self.leftDir = -1
+        else:
+            self.leftDir = 1
+        
+        if(right < 0):
+            self.rightDir = -1
+        else:
+            self.rightDir = 1
+            
+        
+        if(abs(left) + abs(right) > 1):
+            
+            self.motorDriver.left(int(left))
+            self.motorDriver.right(int(right))
+        else:
+            self.motorDriver.stop()
+        
         
     def left_encoder_callback(self, channel):
-        pass
+        self.leftCount += 1
     
     def right_encoder_callback(self, channel):
-        pass
-
+        self.rightCount += 1
     
+    def constrain(self, val):
+        return min(220, max(-220, val))
 
+    def pubJointState(self,time_diff):
+        
+        current_time = rospy.Time.now()
+        odom = Odometry()
+        joint = JointState()
+        joint.name = ["front_left_wheel_joint", "rear_left_wheel_joint","front_right_wheel_joint", "rear_right_wheel_joint"]
+        
+        self.deltaLeft = self.leftCount * self.leftDir
+        
+        # joint position and speed 
+        self.leftCur = ((self.leftCur) + self.leftCount * self.leftDir) % 36
+        self.rightCur = ((self.rightCur) + self.rightCount * self.leftDir) % 36
+        
+        leftRad = self.leftCur * self.meters_per_tick 
+        rightRad = self.rightCur * self.meters_per_tick     
+        
+        leftSpeed = self.leftDir * self.leftCount * self.meters_per_tick / time_diff
+        rightSpeed = self.rightDir * self.rightCount * self.meters_per_tick / time_diff 
+        joint.position = [leftRad,leftRad,rightRad,rightRad]
+        joint.velocity = [leftSpeed,leftSpeed,rightSpeed,rightSpeed]
+        
+        # Odometry calcs
+        deltaDistance = ((self.leftCount + self.rightCount) / 2 ) * self.meters_per_tick
+        
+        dLeft = self.leftCount * self.meters_per_tick * self.leftDir
+        dRight = self.rightCount * self.meters_per_tick * self.rightDir
+        deltaHeading = ( dRight - dLeft ) / (self.rads_per_tick/2)
+  
+        deltaX = deltaDistance * math.cos(deltaHeading);
+        deltaY = deltaDistance * math.sin(deltaHeading);
+        
+        vx = deltaX / time_diff;
+        vy = deltaY / time_diff;
+        vr = deltaHeading / time_diff;
 
+        self.positionX = self.positionX + ( math.cos( self.heading ) * deltaX - math.sin( self.heading ) * deltaY );
+        self.positionY = self.positionY + ( math.sin( self.heading ) * deltaX + math.cos( self.heading ) * deltaY );
+        self.heading = (self.heading + deltaHeading) % (2 * math.pi);
+        
+        
+        q = tf.transformations.quaternion_from_euler(0, 0, self.heading)
+        odom_quat = Quaternion(q[0], q[1], q[2], q[3])
+        
+        odom_trans = TransformStamped() 
+        odom_trans.header.stamp = current_time
+        odom_trans.header.frame_id = "odom"
+        odom_trans.child_frame_id = "base_link"
+
+        odom_trans.transform.translation.x = self.positionX
+        odom_trans.transform.translation.y = self.positionY
+        odom_trans.transform.translation.z = 0.0
+        odom_trans.transform.rotation = odom_quat
+
+        #send the transform
+        self.br.sendTransform(odom_trans)
+
+        #next, we'll publish the odometry message over ROS
+        odom.header.stamp = current_time
+        odom.header.frame_id = "odom"
+    
+        #set the position
+        odom.pose.pose.position.x = self.positionX
+        odom.pose.pose.position.y = self.positionY
+        odom.pose.pose.position.z = 0.0
+        odom.pose.pose.orientation = odom_quat
+    
+        #set the velocity
+        odom.child_frame_id = "base_link";
+        odom.twist.twist.linear.x = vx;
+        odom.twist.twist.linear.y = vy;
+        odom.twist.twist.angular.z = vr;
+        
+        self.leftCount = 0
+        self.rightCount = 0
+        self.velocity_pub.publish(joint)
+        self.odom_pub.publish(odom)  
 
 def main():
-
-    # In ROS, nodes are uniquely named. If two nodes with the same
-    # node are launched, the previous one is kicked off. The
-    # anonymous=True flag means that rospy will choose a unique
-    # name for our 'listener' node so that multiple listeners can
-    # run simultaneously.
     rospy.init_node('hercules_motors', anonymous=True)
     robot = HardwareController()
-
+    
+    lastTime = 0
+    
     rate = rospy.Rate(10) # 10hz
     while not rospy.is_shutdown():
         
+        curTime = time.time()
+        
+        robot.pubJointState(curTime-lastTime)
+        
+        lastTime = curTime
         rate.sleep()
+        
 
     # spin() simply keeps python from exiting until this node is stopped
     #rospy.spin()
