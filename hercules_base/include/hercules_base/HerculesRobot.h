@@ -3,6 +3,7 @@
 #include <hardware_interface/robot_hw.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Twist.h>
+#include <hercules_msgs/Drive.h>
 #include <boost/assign.hpp>
 #include <iostream>
 

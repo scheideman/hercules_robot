@@ -1,0 +1,6 @@
+<launch>
+
+
+  <node pkg="hercules_base" name="encoder_node" type="encoder_node.py"></node>
+  <node pkg="hercules_base" name="skid_steer_drive_node" type="skid_steer_drive.py" output="screen"></node>
+</launch>

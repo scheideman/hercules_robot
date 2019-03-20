@@ -1,15 +1,36 @@
 <launch>
-
+   <rosparam command="load" file="$(find hercules_control)/config/control.yaml" />
    <param name="robot_description"
          command="$(find xacro)/xacro $(find hercules_description)/urdf/hercules.urdf.xacro
                     --inorder" />
-  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" ></node>
-  <node pkg="topic_tools" type="relay" name="cmd_vel_relay"
-        args="/teleop_velocity_smoother/raw_cmd_vel /cmd_vel_drive" />
+   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen"/>
+
+
+<node pkg="hercules_base" type="hercules_node" name="hercules_node" output="screen">
+    <!-- <rosparam>
+      # TODO: Specify these in code rather than here.
+      require:
+        publishers:
+          - status
+          - feedback
+          - imu/data_raw
+          - navsat/nmea_sentence
+        subscribers:
+          - cmd_drive
+          - wifi_connected
+    </rosparam>
+    <param name="wireless_interface" value="$(optenv JACKAL_WIRELESS_INTERFACE wlp2s0)" /> -->
+</node>
+
+   <node name="hercules_controller_spawner" pkg="controller_manager" type="spawner"
+            args="hercules_joint_publisher hercules_velocity_controller" output="screen"/>
+
+
+
+
+  <!-- <node pkg="topic_tools" type="relay" name="cmd_vel_relay"
+        args="/cmd_vel_drive hercules_velocity_controller/cmd_vel" /> -->
   
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
-
-
-
+  
 
 </launch>

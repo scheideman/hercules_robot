@@ -3,8 +3,8 @@
 
 HerculesRobot::HerculesRobot() : nh_()
 {
-  ros::V_string joint_names = boost::assign::list_of("front_left_wheel_joint")
-	  ("front_right_wheel_joint")("rear_left_wheel_joint")("rear_right_wheel_joint");
+  ros::V_string joint_names = boost::assign::list_of("front_left_wheel")
+	  ("front_right_wheel")("back_left_wheel")("back_right_wheel");
 
   for (unsigned int i = 0; i < joint_names.size(); i++) {
 	  hardware_interface::JointStateHandle joint_state_handle(joint_names[i],
@@ -19,7 +19,7 @@ HerculesRobot::HerculesRobot() : nh_()
   registerInterface(&velocity_joint_interface_);
 
   feedback_sub_ = nh_.subscribe("/hw_feedback", 1, &HerculesRobot::feedbackCallback,this);
-  cmd_drive_pub = nh_.advertise<geometry_msgs::Twist>("/cmd_vel_drive", 1);
+  cmd_drive_pub = nh_.advertise<hercules_msgs::Drive>("/cmd_drive", 1);
 }
 
 void HerculesRobot::read()
@@ -29,6 +29,7 @@ void HerculesRobot::read()
     for (int i = 0; i < 4; i++)
     {
       joints_[i].position = feedback_msg->position[i];
+      //joints_[i].position = 0;
       joints_[i].velocity = feedback_msg->velocity[i];
       joints_[i].effort = 0;
     }
@@ -42,7 +43,11 @@ void HerculesRobot::write()
 	double left = joints_[0].velocity_command;
 	double right = joints_[1].velocity_command;
 
-	std::cout <<  left << std::endl;
+  hercules_msgs::Drive msg;
+  msg.left = left/10 * 255;
+  msg.right = right/10 * 255;
+
+  cmd_drive_pub.publish(msg);
 
 
 }

@@ -25,20 +25,6 @@
         <color rgba="0.22 1.0 0.07 1"/>
       </material>
     </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
-      </geometry>
-    </collision>
-    <inertial>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <mass value="1.8"/>
-        <inertia
-          ixx="0.0029" ixy="0" ixz="0"
-          iyy="0.0065" iyz="0"
-          izz="0.0091"/>
-    </inertial>
   </link>
   
   <link name="top_mount">
@@ -107,7 +93,7 @@
 
 <xacro:macro name="wheel" params="prefix *joint_pose">
 
-    <link name="${prefix}_wheel">
+    <link name="${prefix}_wheel_link">
       <visual>
         <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
         <geometry>
@@ -131,21 +117,21 @@
       </inertial>
     </link>
 
-    <gazebo reference="${prefix}_wheel">
+    <gazebo reference="${prefix}_wheel_link">
       <material>Gazebo/DarkGrey</material>
     </gazebo>
 
-    <joint name="${prefix}_wheel_joint" type="continuous">
+    <joint name="${prefix}_wheel" type="continuous">
       <parent link="base_link"/>
-      <child link="${prefix}_wheel" />
+      <child link="${prefix}_wheel_link" />
       <xacro:insert_block name="joint_pose" />
       <axis xyz="0 1 0" />
     </joint>
 
     <transmission name="${prefix}_wheel_trans">
       <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${prefix}_wheel_joint">
-        <hardwareInterface>VelocityJointInterface</hardwareInterface>
+      <joint name="${prefix}_wheel">
+        <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
       </joint>
       <actuator name="${prefix}_actuator">
         <mechanicalReduction>1</mechanicalReduction>

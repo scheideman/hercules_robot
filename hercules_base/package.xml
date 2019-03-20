@@ -42,6 +42,8 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>rospy</build_depend>
   <run_depend>rospy</run_depend>
+  <build_depend>hercules_msgs</build_depend>
+  <run_depend>hercules_msgs</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
