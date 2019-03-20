@@ -16,7 +16,15 @@
 
  <material name="black"><color rgba="0.15 0.15 0.15 1" /></material>
 
-  <link name="base_link">
+
+  <link name="base_link"></link>
+  <joint name="base_link_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="base_link"/>
+    <child link="chassis_link" />
+  </joint>
+
+   <link name="chassis_link">
     <visual>
       <geometry>
         <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
@@ -25,6 +33,22 @@
         <color rgba="0.22 1.0 0.07 1"/>
       </material>
     </visual>
+     <collision>
+      <origin xyz="0 0 ${chassis_height/2}"/>
+      <geometry>
+        <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <!-- Center of mass -->
+      <origin xyz="0.012  0.002 0.067" rpy="0 0 0"/>
+      <mass value="1.5"/>
+      <!-- Moments of inertia: ( chassis without wheels ) -->
+      <inertia
+        ixx="0.3136" ixy="-0.0008" ixz="0.0164"
+        iyy="0.3922" iyz="-0.0009"
+        izz="0.4485"/>
+</inertial>
   </link>
   
   <link name="top_mount">
@@ -41,7 +65,8 @@
   <joint name="top_mount_joint" type="fixed">
     <axis xyz="0 1 0" />
     <origin xyz="0 0 ${chassis_height/2 + 0.04}" rpy="0 0 0"/>
-    <parent link="base_link"/>
+    <parent link="chassis_link"/>
+
     <child link="top_mount"/>
   </joint>
   
@@ -122,7 +147,7 @@
     </gazebo>
 
     <joint name="${prefix}_wheel" type="continuous">
-      <parent link="base_link"/>
+      <parent link="chassis_link"/>
       <child link="${prefix}_wheel_link" />
       <xacro:insert_block name="joint_pose" />
       <axis xyz="0 1 0" />
@@ -167,7 +192,7 @@
     </link>
 
     <joint name="${prefix}_offset_joint" type="fixed">
-      <parent link="base_link"/>
+      <parent link="chassis_link"/>
       <child link="${prefix}_offset" />
       <xacro:insert_block name="offset_pose" />
       <axis xyz="0 1 0" />
@@ -189,6 +214,6 @@
   
 
   <!-- Bring in simulation data for Gazebo. -->
-  <!-- <xacro:include filename="$(find hercules_description)/urdf/hercules.gazebo" /> -->
+  <xacro:include filename="$(find hercules_description)/urdf/hercules.gazebo" />
 
 </robot>
