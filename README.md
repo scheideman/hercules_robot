@@ -13,7 +13,7 @@ Skid-steer drive robot using [hercules chassis](https://www.seeedstudio.com/Skel
 rosrun hercules_base skid_steer_drive.py
 ```
 
-2. Launch closed loop control
+2. Launch ROS closed loop control
 ```bash
 roslaunch hercules_control control.launch
 ```
