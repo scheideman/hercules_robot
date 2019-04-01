@@ -17,7 +17,3 @@ add_executable(hercules_node
 target_link_libraries(hercules_node ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 
-# Build the GPIO node
-add_executable(gpio_node
-        src/gpio_node.cpp)
-target_link_libraries(gpio_node ${catkin_LIBRARIES})

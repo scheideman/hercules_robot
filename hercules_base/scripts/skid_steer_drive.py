@@ -65,9 +65,6 @@ class HardwareController:
         left = data.left
         right = data.right
         
-        # left = ((dx - 4 * dw*(0.17/2))/(0.0425)) / (26) * 255 
-        # right = ((dx + 4 * dw*(0.17/2))/(0.0425)) / (26) * 255
-        
         left = self.constrain(left)
         right = self.constrain(right)
         
@@ -108,8 +105,6 @@ class HardwareController:
         self.deltaRight = self.rightCount * self.rightDir
         
         # joint position and speed 
-        #self.leftCur = ((self.leftCur) + self.leftCount * self.leftDir) % 36
-        #self.rightCur = ((self.rightCur) + self.rightCount * self.leftDir) % 36
         self.leftCur = ((self.leftCur) + self.leftCount * self.leftDir) 
         self.rightCur = ((self.rightCur) + self.rightCount * self.leftDir)
         
@@ -118,7 +113,6 @@ class HardwareController:
         
         leftSpeed = self.leftDir * self.leftCount * self.rads_per_tick / time_diff
         rightSpeed = self.rightDir * self.rightCount * self.rads_per_tick / time_diff 
-        
         
         # Odometry calcs
         deltaDistance = ((self.leftCount + self.rightCount) / 2 ) * self.meters_per_tick
@@ -131,57 +125,11 @@ class HardwareController:
         deltaY = deltaDistance * math.sin(deltaHeading);
         
         joint.position = [leftRad,rightRad,leftRad,rightRad]
-        #print(leftRad)
-        #print(rightRad)
-        #joint.position = [dLeft,dRight,dLeft,dRight]
         joint.velocity = [leftSpeed,rightSpeed,leftSpeed,rightSpeed]
-
-
-        """vx = deltaX / time_diff;
-        vy = deltaY / time_diff;
-        vr = deltaHeading / time_diff;
-
-        self.positionX = self.positionX + ( math.cos( self.heading ) * deltaX - math.sin( self.heading ) * deltaY );
-        self.positionY = self.positionY + ( math.sin( self.heading ) * deltaX + math.cos( self.heading ) * deltaY );
-        self.heading = (self.heading + deltaHeading) % (2 * math.pi);
-        
-        
-        q = tf.transformations.quaternion_from_euler(0, 0, self.heading)
-        odom_quat = Quaternion(q[0], q[1], q[2], q[3])
-        """ 
-        #odom_trans = TransformStamped() 
-        #odom_trans.header.stamp = current_time
-        #odom_trans.header.frame_id = "odom"
-        #odom_trans.child_frame_id = "base_link"
-
-        #odom_trans.transform.translation.x = self.positionX
-        #odom_trans.transform.translation.y = self.positionY
-        #odom_trans.transform.translation.z = 0.0
-        #kodom_trans.transform.rotation = odom_quat
-
-        #send the transform
-        #self.br.sendTransform(odom_trans)
-
-        #next, we'll publish the odometry message over ROS
-        #odom.header.stamp = current_time
-        #odom.header.frame_id = "odom"
-    
-        #set the position
-        #odom.pose.pose.position.x = self.positionX
-        #odom.pose.pose.position.y = self.positionY
-        #odom.pose.pose.position.z = 0.0
-        #odom.pose.pose.orientation = odom_quat
-    
-        #set the velocity
-        #odom.child_frame_id = "base_link"
-        #odom.twist.twist.linear.x = vx
-        #odom.twist.twist.linear.y = vy
-        #odom.twist.twist.angular.z = vr
         
         self.leftCount = 0
         self.rightCount = 0
         self.velocity_pub.publish(joint)
-        #self.odom_pub.publish(odom)  
 
 def main():
     rospy.init_node('hercules_motors', anonymous=True)
@@ -199,9 +147,5 @@ def main():
         lastTime = curTime
         rate.sleep()
         
-
-    # spin() simply keeps python from exiting until this node is stopped
-    #rospy.spin()
-
 if __name__ == '__main__':
     main()
