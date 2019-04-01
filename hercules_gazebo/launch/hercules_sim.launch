@@ -1,13 +1,23 @@
 <launch>
-  <param name="robot_description"
-         command="$(find xacro)/xacro $(find hercules_description)/urdf/hercules.urdf.xacro
-                    --inorder" />
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
 
+  <arg name="use_sim_time" default="true" />
+  <arg name="gui" default="true" />
   <!-- Start Gazebo with an empty world -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch"/>
-  <!-- Spawn a TortoiseBot in Gazebo, taking the description from the
-       parameter server -->
-  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model"
-        args="-param robot_description -urdf -model hercules" />
+
+
+   <param name="robot_description"
+         command="$(find xacro)/xacro $(find hercules_description)/urdf/hercules.urdf.xacro
+                    --inorder" />
+   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen"/>
+
+
+   <rosparam command="load" file="$(find hercules_control)/config/control.yaml" />
+   <node name="hercules_controller_spawner" pkg="controller_manager" type="spawner"
+            args="hercules_joint_publisher hercules_velocity_controller" output="screen"/>
+
+
+  <!-- Spawn a hercules in Gazebo -->
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" 
+        args="-param robot_description -urdf -model hercules" /> 
 </launch>
