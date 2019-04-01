@@ -15,13 +15,12 @@ robot = Motors.Motors(left_trim=LEFT_TRIM, right_trim=RIGHT_TRIM)
 #                     this amount of seconds the robot will stop.  This parameter
 #                     is optional and if not specified the robot will start moving
 #                     forever.
-robot.right(30)      # Spin left at speed 200 for 0.5 seconds.
-robot.left(-30)
+robot.right(160)      # Spin left at speed 200 for 0.5 seconds.
 # Spin in place slowly for a few seconds.
 #robot.right(100)  # No time is specified so the robot will start spinning forever.
-time.sleep(5.0)   # Pause for a few seconds while the robot spins (you could do
+time.sleep(10.0)   # Pause for a few seconds while the robot spins (you could do
                   # other processing here though!).
-robot.stop()      # Stop the robot from moving.
+robot.stop()     # Stop the robot from moving.
 
 # Now move backwards and spin right a few times.
 #robot.right(200, 0.5)

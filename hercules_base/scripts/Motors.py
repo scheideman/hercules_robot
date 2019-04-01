@@ -52,7 +52,6 @@ class Motors(object):
         """Set the speed of the left motor, taking into account its trim offset.
         """
         assert 0 <= speed <= 255, 'Speed must be a value between 0 to 255 inclusive!'
-        print("left",speed)
         speed += self._left_trim
         speed = max(0, min(255, speed))  # Constrain speed to 0-255 after trimming.
         self._front_left.setSpeed(speed)
@@ -62,7 +61,6 @@ class Motors(object):
         """Set the speed of the right motor, taking into account its trim offset.
         """
         assert 0 <= speed <= 255, 'Speed must be a value between 0 to 255 inclusive!'
-        print("right",speed)
         speed += self._right_trim
         speed = max(0, min(255, speed))  # Constrain speed to 0-255 after trimming.
         self._front_right.setSpeed(speed)
