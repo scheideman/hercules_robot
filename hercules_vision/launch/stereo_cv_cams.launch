@@ -1,0 +1,13 @@
+<launch>
+  <group ns="right">
+    <include file="$(find hercules_vision)/launch/logi_cv_camera.launch">
+      <arg name="video_device" value="/dev/video1"/>
+    </include>
+  </group>
+
+  <group ns="left">
+    <include file="$(find hercules_vision)/launch/logi_cv_camera.launch">
+      <arg name="video_device" value="/dev/video2"/>
+    </include>
+  </group>
+</launch>

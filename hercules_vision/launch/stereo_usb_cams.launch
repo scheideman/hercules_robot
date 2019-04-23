@@ -1,0 +1,15 @@
+<launch>
+<group ns="stereo">
+  <group ns="right">
+    <include file="$(find hercules_vision)/launch/logi_usb_cam.launch">
+      <arg name="video_device" value="/dev/video1"/>
+    </include>
+  </group>
+
+  <group ns="left">
+    <include file="$(find hercules_vision)/launch/logi_usb_cam.launch">
+      <arg name="video_device" value="/dev/video2"/>
+    </include>
+  </group>
+</group>
+</launch>
